@@ -1,0 +1,1 @@
+spark flash dino *.bin
