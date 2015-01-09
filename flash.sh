@@ -1,1 +1,1 @@
-spark flash dino *.bin
+/usr/local/bin/spark flash --usb ../../build/applications/iHouse/*.bin

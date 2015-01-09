@@ -18,11 +18,11 @@ String getSlaveResponse():	Get reponses from the connected slave
  public:
  	Master();
  	// Confiure the Master module, reset it, put it in ROLE1, IMME1 and NOTI1 modes
- 	uint8_t config();
+ 	uint32_t config();
 
- 	uint8_t discoverDevices();
+ 	uint32_t discoverDevices();
 
- 	String readResponse();
+ 	String readResponse(String ends="");
  public:
  	uint32_t iNumSlave;
  	String Slave[10]; // store discovered Slave's addresses
