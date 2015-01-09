@@ -10,18 +10,22 @@ bool DEBUG = true;
 Master myMaster;
 void setup()
 {
+	/* Initial serial communication setup */
 	Serial.begin(9600); // For Debug purposes
 	pinMode(D7, OUTPUT);
 	digitalWrite(D7, HIGH);
 	delay(5000);
     Serial1.begin(9600);
-    // Following 2 lines are used to stabilize the UART interface
+
+    /* Following 2 lines are used to stabilize the UART interface
     // After reset, TX line stay low until something is written into TX buffer
     // After writing something to TX buffer, a delay is needed for the HM10 to interpret the AT command
+    */
     Serial1.println("Starting!");
     delay(100);
     myMaster.config();
     myMaster.discoverDevices();
+    myMaster.connectDevice(myMaster.Slave[0]);
 
     // Spark.function("control", HM10_Control);
 
@@ -38,7 +42,6 @@ void setup()
 
 void loop()
 {
-	
 }
 
 int HM10_Control(String command){
