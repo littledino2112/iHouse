@@ -5,18 +5,17 @@ Master::Master():numSlave(0){
 }
 
 uint32_t Master::config(){
-	String responseOK="Set:1";
 	String responseRenew = "RENEW";
 	Serial1.print("AT");
 	Serial.println(readResponse("OK"));
-	Serial1.print("AT+RENEW");
-    Serial.println(readResponse(responseRenew));
+//	Serial1.print("AT+RENEW");
+//    Serial.println(readResponse(responseRenew));
     Serial1.print("AT+ROLE1");  // Set the module as master, default after factory reset is ROLE0
-    Serial.println(readResponse(responseOK));
+    Serial.println(readResponse(responseSet));
     Serial1.print("AT+IMME1");  // After restart, the module just sit there waiting for AT+START or AT+CON commands
-    Serial.println(readResponse(responseOK));
+    Serial.println(readResponse(responseSet));
     Serial1.print("AT+NOTI1");
-    Serial.println(readResponse(responseOK));
+    Serial.println(readResponse(responseSet));
 
     return 1;
 }
@@ -30,15 +29,20 @@ uint32_t Master::config(){
     Serial.println(result);
 
     numSlave = (result.length() - 8 - 8)/20; //This formula bases on the format of response from HM10
-    Serial.print("Length of the string: ");
-    Serial.println(result.length());
-    Serial.print("Number of slaves: ");
-    Serial.println(numSlave);
+    if (DEBUG){
+    	Serial.print("Length of the string: ");
+    	Serial.println(result.length());
+    	Serial.print("Number of slaves: ");
+    	Serial.println(numSlave);
+    }
 
-    for (int i=0; i<numSlave; i++){
+    // Save discovered devices to object member Slave[]
+    for (uint32_t i=0; i<numSlave; i++){
     	Slave[i] = result.substring(16+20*i, 16+20*i+12);
-    	Serial.print("Discovered device: ");
-    	Serial.println(Slave[i]);
+    	if (DEBUG){
+    		Serial.print("Discovered device: ");
+    		Serial.println(Slave[i]);
+    	}
     }
 
  	return numSlave;
@@ -49,12 +53,29 @@ uint32_t Master::connectDevice(String& address){
 	Serial1.print(command);
 	delay(500);
 	String connectionRsp = readResponse("", false);
+	if (DEBUG){
+		Serial.print("Connection response: ");
+		Serial.println(connectionRsp);
+	}
 	if (connectionRsp.substring(11)=="CONN"){
-		Serial.println("Successfully connected!");
+		if (DEBUG){
+			Serial.println("Successfully connected!");
+		}
+		/* Config the connected slave to make sure it's in proper mode of operation
+		 * Mode 1: in this mode, the master can control GPIO2&3. The output state
+		 * will be save after disconnection.
+		 */
+		Serial1.print("AT+MODE1");
+		if (DEBUG){
+			Serial.println("Setting connected slave in Mode 1.");
+		}
+		Serial.println(readResponse(responseSet));
 		return 1;
 	}
 	else
-		Serial.println("Connection failed!");
+		if (DEBUG){
+			Serial.println("Connection failed!");
+		}
 		return -1;
 }
 
