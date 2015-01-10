@@ -25,7 +25,10 @@ void setup()
     delay(100);
     myMaster.config();
     myMaster.discoverDevices();
-    myMaster.connectDevice(myMaster.Slave[0]);
+//    myMaster.connectDevice(myMaster.Slave[0]);
+//    myMaster.setIODevice(3, Master::HI);
+//    delay(1000);
+//    myMaster.setIODevice(3, Master::LO);
 
     // Spark.function("control", HM10_Control);
 
@@ -42,6 +45,22 @@ void setup()
 
 void loop()
 {
+	myMaster.connectDevice(myMaster.Slave[0]);
+	myMaster.setIODevice(3, Master::HI);
+	myMaster.disconnect();
+	delay(1000);
+	myMaster.connectDevice(myMaster.Slave[1]);
+	myMaster.setIODevice(3, Master::HI);
+	myMaster.disconnect();
+	delay(1000);
+	myMaster.connectDevice(myMaster.Slave[0]);
+	myMaster.setIODevice(3, Master::LO);
+	myMaster.disconnect();
+	delay(1000);
+	myMaster.connectDevice(myMaster.Slave[1]);
+	myMaster.setIODevice(3, Master::LO);
+	myMaster.disconnect();
+	delay(1000);
 }
 
 int HM10_Control(String command){

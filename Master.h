@@ -17,7 +17,13 @@ String getSlaveResponse():	Get reponses from the connected slave
  {
  public:
  	Master();
- 	// Confiure the Master module, reset it, put it in ROLE1, IMME1 and NOTI1 modes.
+
+ 	enum GPIOState {
+ 	 		LO = 0,
+ 			HI = 1
+ 	 	};
+
+ 	// Configure the Master module, reset it, put it in ROLE1, IMME1 and NOTI1 modes.
  	uint32_t config();
 
  	/* Discover other HM-10 modules in slave modes (advertising and connectable).
@@ -33,6 +39,11 @@ String getSlaveResponse():	Get reponses from the connected slave
  	 */
  	uint32_t connectDevice(String& address);
 
+ 	/* Disconnect to a device
+ 	 *
+ 	 */
+ 	uint32_t disconnect();
+
  	/* Read AT responses from the HM10 master module
  	 * Inputs: String ends, bool endWidth. If String [ends] is provided, the func will keep reading
  	 * the Serial port until it finds the indicated String.
@@ -40,10 +51,19 @@ String getSlaveResponse():	Get reponses from the connected slave
  	 * available in the buffer.
  	 */
  	String readResponse(String ends="", bool endWith=true);
+
+ 	/* Set GPIO 2 or 3 of the connected device to 1
+ 	 *
+ 	 */
+ 	uint32_t setIODevice(uint8_t pin, GPIOState state);
+
  public:
  	uint32_t numSlave;
- 	String Slave[10]; // store discovered Slave's addresses
+ 	String* Slave; // store discovered Slave's addresses
  	bool DEBUG=true;
+
+
+
  private:
  	String responseSet = "Set:1";
  };

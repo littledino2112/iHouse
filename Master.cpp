@@ -59,17 +59,18 @@ uint32_t Master::connectDevice(String& address){
 	}
 	if (connectionRsp.substring(11)=="CONN"){
 		if (DEBUG){
-			Serial.println("Successfully connected!");
+			Serial.print("Successfully connected to ");
+			Serial.println(address);
 		}
 		/* Config the connected slave to make sure it's in proper mode of operation
 		 * Mode 1: in this mode, the master can control GPIO2&3. The output state
 		 * will be save after disconnection.
 		 */
-		Serial1.print("AT+MODE1");
-		if (DEBUG){
-			Serial.println("Setting connected slave in Mode 1.");
-		}
-		Serial.println(readResponse(responseSet));
+//		Serial1.print("AT+MODE1");
+//		if (DEBUG){
+//			Serial.println("Setting connected slave in Mode 1.");
+//		}
+//		Serial.println(readResponse(responseSet));
 		return 1;
 	}
 	else
@@ -98,4 +99,39 @@ String Master::readResponse(String ends, bool endWith){
 	}
 
 	return tempString;
+}
+
+uint32_t Master::setIODevice(uint8_t pin, GPIOState state){
+	String cmd="AT+PIO";
+	if (pin==2){
+		cmd.concat("2");
+	}
+	else if (pin==3){
+		cmd.concat("3");
+	}
+	else // In Mode 1, only GPIO 2&3 can be controlled
+	{
+		Serial.print("Invalid GPIO");
+		return -1;
+	}
+
+	// Set or clear pin state
+	if (state==LO){
+		cmd.concat("0");
+		Serial1.print(cmd);
+		Serial.println(readResponse(":0"));
+	}
+	else if (state==HI){
+		cmd.concat("1");
+		Serial1.print(cmd);
+		Serial.println(readResponse(":1"));
+	}
+	return 1;
+}
+
+uint32_t Master::disconnect(){
+	Serial1.print("AT");
+	Serial.println(readResponse("LOST"));
+
+	return 1;
 }
