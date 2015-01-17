@@ -38,7 +38,8 @@ uint32_t Master::config(){
 
     // Save discovered devices to object member Slave[]
     for (uint32_t i=0; i<numSlave; i++){
-    	Slave[i] = result.substring(16+20*i, 16+20*i+12);
+//    	Slave[i] = result.substring(16+20*i, 16+20*i+12);
+    	result.substring(16+20*i, 16+20*i+12).toCharArray(Slave[i], 50, 0);
     	if (DEBUG){
     		Serial.print("Discovered device: ");
     		Serial.println(Slave[i]);
@@ -48,8 +49,10 @@ uint32_t Master::config(){
  	return numSlave;
  }
 
-uint32_t Master::connectDevice(String& address){
-	String command = "AT+CON" + address;
+uint32_t Master::connectDevice(const char* address){
+//	String command = "AT+CON" + address;
+	String command = "AT+CON";
+	command.concat(address);
 	Serial1.print(command);
 	delay(500);
 	String connectionRsp = readResponse("", false);

@@ -5,8 +5,9 @@ to set up a star network formed by multiple slave HM10 modules.
 */
 #include "Master.h"
 #include "application.h"
+#include <string.h>
 
-bool DEBUG = true;
+const bool DEBUG=1;
 Master myMaster;
 void setup()
 {
@@ -14,8 +15,9 @@ void setup()
 	Serial.begin(9600); // For Debug purposes
 	pinMode(D7, OUTPUT);
 	digitalWrite(D7, HIGH);
-	delay(5000);
+	delay(5000);	// wait for 5s so one can connect to serial monitor for watching results!
     Serial1.begin(9600);
+	Serial.println("Starting!");
 
     /* Following 2 lines are used to stabilize the UART interface
     // After reset, TX line stay low until something is written into TX buffer
@@ -27,40 +29,43 @@ void setup()
     myMaster.discoverDevices();
 //    myMaster.connectDevice(myMaster.Slave[0]);
 //    myMaster.setIODevice(3, Master::HI);
-//    delay(1000);
-//    myMaster.setIODevice(3, Master::LO);
-
     // Spark.function("control", HM10_Control);
+    Spark.variable("slaveNumber",&myMaster.numSlave, INT);
+    for (uint8_t i=0; i<myMaster.numSlave; i++){
+    	char temp[2];
+    	char tempCommand[10]="slave";
+    	sprintf(temp, "%d", i);
+    	strcat(tempCommand, temp);
+    	Spark.variable(tempCommand, myMaster.Slave[i], STRING);
+    	if (DEBUG){
+    		Serial.println(tempCommand);
+    	}
+    }
 
+    if (DEBUG){
+    	Serial.println("Done setup!");
+    }
 
- //    if (DEBUG) {
- //        delay(5000);
- //        Serial1.print("AT+CONB4994C715302");
- //        delay(1000);
- //        Serial1.print("AT+PIO31");
- //        delay(5000);
- //        Serial1.print("AT"); // Will disconnect from slave with this command 
- //    }
-}
+ }
 
 void loop()
 {
-	myMaster.connectDevice(myMaster.Slave[0]);
-	myMaster.setIODevice(3, Master::HI);
-	myMaster.disconnect();
-	delay(1000);
-	myMaster.connectDevice(myMaster.Slave[1]);
-	myMaster.setIODevice(3, Master::HI);
-	myMaster.disconnect();
-	delay(1000);
-	myMaster.connectDevice(myMaster.Slave[0]);
-	myMaster.setIODevice(3, Master::LO);
-	myMaster.disconnect();
-	delay(1000);
-	myMaster.connectDevice(myMaster.Slave[1]);
-	myMaster.setIODevice(3, Master::LO);
-	myMaster.disconnect();
-	delay(1000);
+//	myMaster.connectDevice(myMaster.Slave[0]);
+//	myMaster.setIODevice(3, Master::HI);
+//	myMaster.disconnect();
+//	delay(1000);
+//	myMaster.connectDevice(myMaster.Slave[1]);
+//	myMaster.setIODevice(3, Master::HI);
+//	myMaster.disconnect();
+//	delay(1000);
+//	myMaster.connectDevice(myMaster.Slave[0]);
+//	myMaster.setIODevice(3, Master::LO);
+//	myMaster.disconnect();
+//	delay(1000);
+//	myMaster.connectDevice(myMaster.Slave[1]);
+//	myMaster.setIODevice(3, Master::LO);
+//	myMaster.disconnect();
+//	delay(1000);
 }
 
 int HM10_Control(String command){

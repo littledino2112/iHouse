@@ -37,7 +37,7 @@ String getSlaveResponse():	Get reponses from the connected slave
  	 * Inputs: MAC address of the device want to connect to.
  	 * Output: 1 if successfully connected, -1 if fail to connect.
  	 */
- 	uint32_t connectDevice(String& address);
+ 	uint32_t connectDevice(const char* address);
 
  	/* Disconnect to a device
  	 *
@@ -59,7 +59,8 @@ String getSlaveResponse():	Get reponses from the connected slave
 
  public:
  	uint32_t numSlave;
- 	String* Slave; // store discovered Slave's addresses
+// 	String Slave[50]; // store discovered Slave's addresses
+ 	char Slave[10][50];
  	bool DEBUG=true;
 
 
