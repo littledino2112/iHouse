@@ -9,6 +9,7 @@ to set up a star network formed by multiple slave HM10 modules.
 
 const bool DEBUG=1;
 Master myMaster;
+int findDevice(String command); //Forward declaration
 void setup()
 {
 	/* Initial serial communication setup */
@@ -26,42 +27,27 @@ void setup()
     Serial1.println("Starting!");
     delay(100);
     myMaster.config();
-    myMaster.discoverDevices();
-//    myMaster.connectDevice(myMaster.Slave[0]);
-//    myMaster.setIODevice(3, Master::HI);
-    // Spark.function("control", HM10_Control);
-    Spark.variable("slaveNumber",&myMaster.numSlave, INT);
-    for (uint8_t i=0; i<myMaster.numSlave; i++){
-    	char temp[2];
-    	char tempCommand[10]="slave";
-    	sprintf(temp, "%d", i);
-    	strcat(tempCommand, temp);
-    	Spark.variable(tempCommand, myMaster.Slave[i], STRING);
-    	if (DEBUG){
-    		Serial.println(tempCommand);
-    	}
-    }
-
+//     Spark.function("control", HM10_Control);
+    Spark.function("findDevice", findDevice);
+    Spark.variable("numSlave",&myMaster.numSlave, INT);
+    Spark.variable("foundDevices", &myMaster.SlaveArray, STRING);
+//    for (uint8_t i=0; i<myMaster.numSlave; i++){
+//    	char temp[2];
+//    	char tempCommand[10]="slave";
+//    	sprintf(temp, "%d", i);
+//    	strcat(tempCommand, temp);
+//    	Spark.variable(tempCommand, myMaster.Slave[i], STRING);
+//    	if (DEBUG){
+//    		Serial.println(tempCommand);
+//    	}
+//    }
     if (DEBUG){
-    	Serial.println("Done setup!");
+    	Serial.println("Done discovery!");
     }
-
- }
+}
 
 void loop()
 {
-//	myMaster.connectDevice(myMaster.Slave[0]);
-//	myMaster.setIODevice(3, Master::HI);
-//	myMaster.disconnect();
-//	delay(1000);
-//	myMaster.connectDevice(myMaster.Slave[1]);
-//	myMaster.setIODevice(3, Master::HI);
-//	myMaster.disconnect();
-//	delay(1000);
-//	myMaster.connectDevice(myMaster.Slave[0]);
-//	myMaster.setIODevice(3, Master::LO);
-//	myMaster.disconnect();
-//	delay(1000);
 //	myMaster.connectDevice(myMaster.Slave[1]);
 //	myMaster.setIODevice(3, Master::LO);
 //	myMaster.disconnect();
@@ -78,4 +64,9 @@ int HM10_Control(String command){
     	Serial1.print("AT+PIO30");
     }
     return 1;
+}
+
+int findDevice(String command){
+    myMaster.discoverDevices();
+   	return 1;
 }

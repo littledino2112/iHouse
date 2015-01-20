@@ -10,12 +10,17 @@ String getSlaveResponse():	Get reponses from the connected slave
  */
 
 #include "application.h"
+#include <string.h>
 #ifndef __MASTER_H
 #define __MASTER_H
 
- class Master
- {
- public:
+class Master
+{
+private:
+ 	String responseSet = "Set:1";
+ 	static uint8_t const MAX_DEVICES = 10;
+
+public:
  	Master();
 
  	enum GPIOState {
@@ -57,16 +62,12 @@ String getSlaveResponse():	Get reponses from the connected slave
  	 */
  	uint32_t setIODevice(uint8_t pin, GPIOState state);
 
- public:
+public:
  	uint32_t numSlave;
 // 	String Slave[50]; // store discovered Slave's addresses
  	char Slave[10][50];
+ 	char SlaveArray[MAX_DEVICES];
  	bool DEBUG=true;
-
-
-
- private:
- 	String responseSet = "Set:1";
- };
+};
 
  #endif

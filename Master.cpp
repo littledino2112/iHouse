@@ -20,7 +20,8 @@ uint32_t Master::config(){
     return 1;
 }
 
- uint32_t Master::discoverDevices(){
+uint32_t Master::discoverDevices(){
+	memset(SlaveArray, 0, sizeof(SlaveArray));
 	String endWith = "DISCE";
 	delay(1000);
  	Serial1.print("AT+DISC?");
@@ -38,19 +39,21 @@ uint32_t Master::config(){
 
     // Save discovered devices to object member Slave[]
     for (uint32_t i=0; i<numSlave; i++){
-//    	Slave[i] = result.substring(16+20*i, 16+20*i+12);
+    	memset(Slave, 0, sizeof(Slave));
     	result.substring(16+20*i, 16+20*i+12).toCharArray(Slave[i], 50, 0);
+    	strcat(SlaveArray, Slave[i]);
+    	if (i<(numSlave-1))
+    		strcat(SlaveArray, ";");
     	if (DEBUG){
     		Serial.print("Discovered device: ");
     		Serial.println(Slave[i]);
+    		Serial.println(SlaveArray);
     	}
     }
-
  	return numSlave;
  }
 
 uint32_t Master::connectDevice(const char* address){
-//	String command = "AT+CON" + address;
 	String command = "AT+CON";
 	command.concat(address);
 	Serial1.print(command);
