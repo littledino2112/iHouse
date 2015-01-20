@@ -31,16 +31,6 @@ void setup()
     Spark.function("findDevice", findDevice);
     Spark.variable("numSlave",&myMaster.numSlave, INT);
     Spark.variable("foundDevices", &myMaster.SlaveArray, STRING);
-//    for (uint8_t i=0; i<myMaster.numSlave; i++){
-//    	char temp[2];
-//    	char tempCommand[10]="slave";
-//    	sprintf(temp, "%d", i);
-//    	strcat(tempCommand, temp);
-//    	Spark.variable(tempCommand, myMaster.Slave[i], STRING);
-//    	if (DEBUG){
-//    		Serial.println(tempCommand);
-//    	}
-//    }
     if (DEBUG){
     	Serial.println("Done discovery!");
     }

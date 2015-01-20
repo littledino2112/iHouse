@@ -21,6 +21,10 @@ uint32_t Master::config(){
 }
 
 uint32_t Master::discoverDevices(){
+	if (DEBUG){
+		Serial.print("Size of SlaveArray: ");
+		Serial.println(sizeof(SlaveArray));
+	}
 	memset(SlaveArray, 0, sizeof(SlaveArray));
 	String endWith = "DISCE";
 	delay(1000);
@@ -39,7 +43,11 @@ uint32_t Master::discoverDevices(){
 
     // Save discovered devices to object member Slave[]
     for (uint32_t i=0; i<numSlave; i++){
-    	memset(Slave, 0, sizeof(Slave));
+    	if (DEBUG){
+    		Serial.print("Size of Slave[i] array: ");
+    		Serial.println(sizeof(Slave[i]));
+    	}
+    	memset(Slave[i], 0, sizeof(Slave[i]));
     	result.substring(16+20*i, 16+20*i+12).toCharArray(Slave[i], 50, 0);
     	strcat(SlaveArray, Slave[i]);
     	if (i<(numSlave-1))

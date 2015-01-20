@@ -66,7 +66,7 @@ public:
  	uint32_t numSlave;
 // 	String Slave[50]; // store discovered Slave's addresses
  	char Slave[10][50];
- 	char SlaveArray[MAX_DEVICES];
+ 	char SlaveArray[MAX_DEVICES*12];
  	bool DEBUG=true;
 };
 
