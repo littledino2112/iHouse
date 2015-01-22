@@ -8,8 +8,8 @@ uint32_t Master::config(){
 	String responseRenew = "RENEW";
 	Serial1.print("AT");
 	Serial.println(readResponse("OK"));
-//	Serial1.print("AT+RENEW");
-//    Serial.println(readResponse(responseRenew));
+	Serial1.print("AT+RENEW");
+    Serial.println(readResponse(responseRenew));
     Serial1.print("AT+ROLE1");  // Set the module as master, default after factory reset is ROLE0
     Serial.println(readResponse(responseSet));
     Serial1.print("AT+IMME1");  // After restart, the module just sit there waiting for AT+START or AT+CON commands
@@ -48,7 +48,7 @@ uint32_t Master::discoverDevices(){
     		Serial.println(sizeof(Slave[i]));
     	}
     	memset(Slave[i], 0, sizeof(Slave[i]));
-    	result.substring(16+20*i, 16+20*i+12).toCharArray(Slave[i], 50, 0);
+    	result.substring(16+20*i, 16+20*i+12).toCharArray(Slave[i], sizeof(Slave[i]), 0);
     	strcat(SlaveArray, Slave[i]);
     	if (i<(numSlave-1))
     		strcat(SlaveArray, ";");

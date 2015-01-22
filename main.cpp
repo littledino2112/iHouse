@@ -9,14 +9,19 @@ to set up a star network formed by multiple slave HM10 modules.
 
 const bool DEBUG=1;
 Master myMaster;
-int findDevice(String command); //Forward declaration
+
+// Forward declaration
+int findDevice(String command);
+int HM_IOControl(String);
+void signalDoneConfig();
+
 void setup()
 {
 	/* Initial serial communication setup */
 	Serial.begin(9600); // For Debug purposes
 	pinMode(D7, OUTPUT);
-	digitalWrite(D7, HIGH);
-	delay(5000);	// wait for 5s so one can connect to serial monitor for watching results!
+//	digitalWrite(D7, LOW);
+//	delay(5000);	// wait for 5s so one can connect to serial monitor for watching results!
     Serial1.begin(9600);
 	Serial.println("Starting!");
 
@@ -27,13 +32,11 @@ void setup()
     Serial1.println("Starting!");
     delay(100);
     myMaster.config();
-//     Spark.function("control", HM10_Control);
+    signalDoneConfig();
     Spark.function("findDevice", findDevice);
     Spark.variable("numSlave",&myMaster.numSlave, INT);
     Spark.variable("foundDevices", &myMaster.SlaveArray, STRING);
-    if (DEBUG){
-    	Serial.println("Done discovery!");
-    }
+    Spark.function("io_control", HM_IOControl);
 }
 
 void loop()
@@ -44,19 +47,35 @@ void loop()
 //	delay(1000);
 }
 
-int HM10_Control(String command){
-    if (command=="1"){
-    	// Send AT command: AT+PIO31 to turn attached LED ON
-    	Serial1.print("AT+PIO31");
-    }
-    else if (command=="0"){
-    	// Send AT command: AT+PIO30 to turn attached LED OFF
-    	Serial1.print("AT+PIO30");
-    }
+int HM_IOControl(String command){
+	char slaveAddress[15];
+	char state[2];
+	command.substring(0,12).toCharArray(slaveAddress, sizeof(slaveAddress), 0);
+	command.substring(13).toCharArray(state, sizeof(state), 0);
+	myMaster.connectDevice(slaveAddress);
+	if (strcmp(state,"1")==0)
+		myMaster.setIODevice(3, Master::HI);
+	else if (strcmp(state,"0")==0)
+		myMaster.setIODevice(3, Master::LO);
+	myMaster.disconnect();
+	if (DEBUG){
+		Serial.println(command);
+		Serial.println(slaveAddress);
+		Serial.println(state);
+	}
     return 1;
 }
 
 int findDevice(String command){
     myMaster.discoverDevices();
    	return 1;
+}
+
+void signalDoneConfig(){
+	for (int i=0; i<5; i++){
+		digitalWrite(D7, HIGH);
+		delay(100);
+		digitalWrite(D7, LOW);
+		delay(100);
+	}
 }
