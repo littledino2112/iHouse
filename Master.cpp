@@ -149,3 +149,22 @@ uint32_t Master::disconnect(){
 
 	return 1;
 }
+
+uint32_t Master::checkIOState(uint8_t pin){
+	char cmd[15] = "AT+PIO";
+	if (pin==2){
+		strcat(cmd, "2");
+	}
+	else if (pin==3){
+		strcat(cmd, "3");
+	}
+	strcat(cmd,"?");
+	Serial1.print(cmd);
+	delay(500);
+	String response = readResponse("",false);
+	if (response.endsWith(":1")){
+		return 1;
+	}
+	else
+		return 0;
+}

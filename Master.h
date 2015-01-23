@@ -62,6 +62,8 @@ public:
  	 */
  	uint32_t setIODevice(uint8_t pin, GPIOState state);
 
+ 	uint32_t checkIOState(uint8_t pin);
+
 public:
  	uint32_t numSlave;
 // 	String Slave[50]; // store discovered Slave's addresses

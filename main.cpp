@@ -13,6 +13,7 @@ Master myMaster;
 // Forward declaration
 int findDevice(String command);
 int HM_IOControl(String);
+int checkIOState(String);
 void signalDoneConfig();
 
 void setup()
@@ -37,6 +38,7 @@ void setup()
     Spark.variable("numSlave",&myMaster.numSlave, INT);
     Spark.variable("foundDevices", &myMaster.SlaveArray, STRING);
     Spark.function("io_control", HM_IOControl);
+    Spark.function("checkIO",checkIOState);
 }
 
 void loop()
@@ -47,6 +49,9 @@ void loop()
 //	delay(1000);
 }
 
+/* Spark function HM_IOControl: control GPIO (2 or 3) of the connected slave device
+ * Argument: [String] command in the following format: [mac address: 12 characters],[state: 0 or 1]
+ */
 int HM_IOControl(String command){
 	char slaveAddress[15];
 	char state[2];
@@ -66,11 +71,47 @@ int HM_IOControl(String command){
     return 1;
 }
 
+/* Spark function findDevice: trigger discovery of slave devices
+ * Argument: String command
+ */
 int findDevice(String command){
     myMaster.discoverDevices();
    	return 1;
 }
 
+/* Spark function checkIOState: trigger checking of GPIO state of slave device
+ * Argument: String command: consists of device's mac address + gpio that want to check (2 or 3)
+ * command in the following format: [mac address],[2 or 3]
+ * Output: 0 for OFF, 1 for ON
+ */
+int checkIOState(String command){
+	if (DEBUG){
+		Serial.println("Checking IO state: " + command);
+	}
+	char slaveAddress[15];
+	char gpio[2];
+	command.substring(0,12).toCharArray(slaveAddress, sizeof(slaveAddress), 0);
+	command.substring(13).toCharArray(gpio, sizeof(gpio), 0);
+	myMaster.connectDevice(slaveAddress);
+	int result;
+	if (strcmp(gpio, "2")==0){
+		result = myMaster.checkIOState(2);
+		myMaster.disconnect();
+		return result;
+	}
+	else if (strcmp(gpio, "3")==0){
+		result = myMaster.checkIOState(3);
+		myMaster.disconnect();
+		return result;
+	}
+
+	else {
+		myMaster.disconnect();
+		return -1;
+	}
+
+
+}
 void signalDoneConfig(){
 	for (int i=0; i<5; i++){
 		digitalWrite(D7, HIGH);
@@ -79,3 +120,4 @@ void signalDoneConfig(){
 		delay(100);
 	}
 }
+
