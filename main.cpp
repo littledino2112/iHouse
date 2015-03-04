@@ -6,30 +6,60 @@ to set up a star network formed by multiple slave HM10 modules.
 #include "Master.h"
 #include "application.h"
 #include <string.h>
+#include "VC0706_camera.h"
+#include "SD.h"
+#include "SdFat.h"
+
+Master myMaster;
+VC0706 myCamera;
+File myImage;
 
 const bool DEBUG=1;
-Master myMaster;
+const uint8_t chip_select = A2;
+uint16_t image_count = 1;
 
 // Forward declaration
 int findDevice(String command);
 int HM_IOControl(String);
 int checkIOState(String);
 void signalDoneConfig();
+void setTimeStamp(uint16_t* date, uint16_t* time);
 
 void setup()
 {
 	/* Initial serial communication setup */
-	Serial.begin(9600); // For Debug purposes
+	Serial.begin(115200); // For Debug purposes
+	Spark.syncTime();
 	pinMode(D7, OUTPUT);
-//	digitalWrite(D7, LOW);
-//	delay(5000);	// wait for 5s so one can connect to serial monitor for watching results!
     Serial1.begin(9600);
+    while (!Serial.available());
 	Serial.println("Starting!");
+
+	// Initialize SD card
+	Serial.println("Initialize SD card...");
+	if (!SD.begin(chip_select)){
+		Serial.println("SD card failed to initialized!");
+		return;
+	}
+
+	// Initialize Camera VC0706
+	Serial.println("Initialize Camera...");
+	if (strcmp(myCamera.getCameraVersion(),"")==0){
+		Serial.println("Camera not found!");
+		return;
+	}
+	else {
+		Serial.println("Camera found!");
+		Serial.print("Camera version: ");
+		Serial.println(myCamera.camera_version);
+		SdFile::dateTimeCallback(setTimeStamp);
+	}
 
     /* Following 2 lines are used to stabilize the UART interface
     // After reset, TX line stay low until something is written into TX buffer
     // After writing something to TX buffer, a delay is needed for the HM10 to interpret the AT command
     */
+	Serial.println("Initialize HM10 master...");
     Serial1.println("Starting!");
     delay(100);
     myMaster.config();
@@ -112,6 +142,7 @@ int checkIOState(String command){
 
 
 }
+
 void signalDoneConfig(){
 	for (int i=0; i<5; i++){
 		digitalWrite(D7, HIGH);
@@ -119,5 +150,20 @@ void signalDoneConfig(){
 		digitalWrite(D7, LOW);
 		delay(100);
 	}
+}
+
+void setTimeStamp(uint16_t* date, uint16_t* time){
+	uint16_t year;
+	uint8_t month, day, hour, minute, second;
+
+	year = Time.year();
+	month = Time.month();
+	day = Time.day();
+	hour = Time.hour();
+	minute = Time.minute();
+	second = Time.second();
+
+	*date = FAT_DATE(year, month, day);
+	*time = FAT_TIME(hour, minute, second);
 }
 
