@@ -10,7 +10,7 @@
 
 VC0706::VC0706():frame_pointer(0), buffer_counter(0){
 	//Initilize Serial2 port used to communicate with the camera
-	Serial2.begin(115200);
+//	Serial2.begin(115200);
 }
 
 /*	@brief Send basic commands to the Camera. This normally doesn't require any extra data to be sent.

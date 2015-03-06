@@ -15,13 +15,16 @@ VC0706 myCamera;
 File myImage;
 
 const bool DEBUG=1;
+const uint8_t eeprom_address = 1;
 const uint8_t chip_select = A2;
 uint16_t image_count = 1;
+uint8_t folder_num;
 
 // Forward declaration
 int findDevice(String command);
 int HM_IOControl(String);
 int checkIOState(String);
+int takePicture(String);
 void signalDoneConfig();
 void setTimeStamp(uint16_t* date, uint16_t* time);
 
@@ -31,7 +34,12 @@ void setup()
 	Serial.begin(115200); // For Debug purposes
 	Spark.syncTime();
 	pinMode(D7, OUTPUT);
-    Serial1.begin(9600);
+	digitalWrite(D7, HIGH);
+    Serial1.begin(9600);	// Somehow, the Serial1 needs to be initialized before Serial2!
+    Serial2.begin(115200);	// Doesn't work the other way around
+    // Reading Folder info from EEPROM
+    folder_num = EEPROM.read(eeprom_address);
+
     while (!Serial.available());
 	Serial.println("Starting!");
 
@@ -65,6 +73,7 @@ void setup()
     myMaster.config();
     signalDoneConfig();
     Spark.function("findDevice", findDevice);
+    Spark.function("takePicture", takePicture);
     Spark.variable("numSlave",&myMaster.numSlave, INT);
     Spark.variable("foundDevices", &myMaster.SlaveArray, STRING);
     Spark.function("io_control", HM_IOControl);
@@ -141,6 +150,75 @@ int checkIOState(String command){
 	}
 
 
+}
+
+/* @brief	Take a picture once commanded by the Spark cloud
+ * @detail	None
+ * @param[in]	cmd	A string sent from Spark Cloud
+ * @return		int	1 if picture taken succesfully, 0 otherwise
+ */
+int takePicture(String cmd){
+	for (int count=1;count<=7;count++){
+		// If takePicture() is ever called, the folder_num will be incremented and saved to EEPROM
+		if (image_count==1){
+			EEPROM.write(eeprom_address,++folder_num);
+		}
+		Serial.println("Taking picture!");
+        if(myCamera.resumeVideo()) Serial.println("Resume video.");
+        delay(500);	// a delay is needed btw resumeVideo() and takePicture() in order to get a proper snapshot
+        if(myCamera.takePicture()) Serial.println("Snapped!");
+
+        // Open an image on SD card to write
+        char image_name[11]="img";//follow 8.3 DOS file name format
+        char image_count_str[5];
+        sprintf(image_count_str,"%d",image_count);
+        strcat(image_name,image_count_str);
+        char extension[]=".jpg";
+        strcat(image_name,extension);
+
+        char image_path[20]="FOLDER";
+        char folder_number_char[3];	// Maxium is 255
+        sprintf(folder_number_char, "%d", folder_num);
+        strcat(image_path,folder_number_char);
+        Serial.print("Making directory ");
+        Serial.println(image_path);
+		Serial.println(SD.mkdir(image_path));
+
+        strcat(image_path,"/");
+        strcat(image_path,image_name);
+        Serial.println(image_path);
+
+        myImage = SD.open(image_path, FILE_WRITE);
+
+        if (myImage){
+            int32_t image_size = myCamera.getImageLength();
+            Serial.println(image_size);
+            uint8_t bytes_to_read = 128;
+            unsigned long time_begin = millis();
+            while (image_size>0){
+                if (image_size<bytes_to_read){
+                    bytes_to_read=image_size;
+                }
+                uint8_t* stuffed_partial_image=myCamera.readPictureData(bytes_to_read);
+                for (int i=5; i<bytes_to_read+5;i++){
+                    myImage.write(*(stuffed_partial_image+i));
+                }
+                image_size=image_size-bytes_to_read;
+                Serial.print(".");
+            }
+            myImage.close();
+            unsigned long time_taken = millis()-time_begin;
+            Serial.println("Image saved!");
+            Serial.print("Time to take 1 image(ms): ");
+            Serial.println(time_taken);
+            image_count++;	//increase image count
+        }
+        else {
+            Serial.println("Failed to open file");
+            return 0;
+        }
+	}
+	return 1;
 }
 
 void signalDoneConfig(){
