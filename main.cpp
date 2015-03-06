@@ -43,13 +43,11 @@ void setup()
     while (!Serial.available());
 	Serial.println("Starting!");
 
-	// Initialize SD card
-	Serial.println("Initialize SD card...");
+    Serial.println("Initialize SD card...");
 	if (!SD.begin(chip_select)){
 		Serial.println("SD card failed to initialized!");
-		return;
+		return ;
 	}
-
 	// Initialize Camera VC0706
 	Serial.println("Initialize Camera...");
 	if (strcmp(myCamera.getCameraVersion(),"")==0){
@@ -158,6 +156,8 @@ int checkIOState(String command){
  * @return		int	1 if picture taken succesfully, 0 otherwise
  */
 int takePicture(String cmd){
+    // Initialize SD card
+
 	for (int count=1;count<=7;count++){
 		// If takePicture() is ever called, the folder_num will be incremented and saved to EEPROM
 		if (image_count==1){
