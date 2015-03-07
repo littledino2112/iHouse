@@ -17,8 +17,8 @@ File myImage;
 const bool DEBUG=1;
 const uint8_t eeprom_address = 1;
 const uint8_t chip_select = A2;
-uint16_t image_count = 1;
-uint8_t folder_num;
+uint16_t image_count;
+//uint8_t folder_num;
 
 // Forward declaration
 int findDevice(String command);
@@ -34,13 +34,13 @@ void setup()
 	Serial.begin(115200); // For Debug purposes
 	Spark.syncTime();
 	pinMode(D7, OUTPUT);
-	digitalWrite(D7, HIGH);
+	digitalWrite(D7, LOW);
     Serial1.begin(9600);	// Somehow, the Serial1 needs to be initialized before Serial2!
     Serial2.begin(115200);	// Doesn't work the other way around
     // Reading Folder info from EEPROM
-    folder_num = EEPROM.read(eeprom_address);
+//    folder_num = EEPROM.read(eeprom_address);
 
-    while (!Serial.available());
+    while (!Serial.available());	// This is for debugging purpose only
 	Serial.println("Starting!");
 
     Serial.println("Initialize SD card...");
@@ -156,38 +156,72 @@ int checkIOState(String command){
  * @return		int	1 if picture taken succesfully, 0 otherwise
  */
 int takePicture(String cmd){
-    // Initialize SD card
+	digitalWrite(D7, HIGH);	// Indicate photo is being taken
+
+	uint8_t day_to_compare = EEPROM.read(1);	// day is stored in Address 1
+	uint8_t month_to_compare = EEPROM.read(2);	// month is stored in Address 2
+	Serial.print("Day stored is ");
+	Serial.println(day_to_compare);
+	Serial.print("Month stored is ");
+	Serial.println(month_to_compare);
+	if ((day_to_compare!=Time.day())&&(month_to_compare!=Time.month())){
+		Serial.println("Day and month are not matched.");
+		image_count = 1;
+		EEPROM.write(1,Time.day());
+		EEPROM.write(2,Time.month());
+	}
+	else {
+		Serial.println("Day and month are matched");
+		image_count = EEPROM.read(3);
+		Serial.print("Image count is ");
+		Serial.println(image_count);
+	}
 
 	for (int count=1;count<=7;count++){
 		// If takePicture() is ever called, the folder_num will be incremented and saved to EEPROM
-		if (image_count==1){
-			EEPROM.write(eeprom_address,++folder_num);
-		}
+//		if (image_count==1){
+//			EEPROM.write(eeprom_address,++folder_num);
+//		}
 		Serial.println("Taking picture!");
         if(myCamera.resumeVideo()) Serial.println("Resume video.");
         delay(500);	// a delay is needed btw resumeVideo() and takePicture() in order to get a proper snapshot
         if(myCamera.takePicture()) Serial.println("Snapped!");
 
         // Open an image on SD card to write
-        char image_name[11]="img";//follow 8.3 DOS file name format
-        char image_count_str[5];
-        sprintf(image_count_str,"%d",image_count);
-        strcat(image_name,image_count_str);
-        char extension[]=".jpg";
-        strcat(image_name,extension);
-
-        char image_path[20]="FOLDER";
-        char folder_number_char[3];	// Maxium is 255
-        sprintf(folder_number_char, "%d", folder_num);
-        strcat(image_path,folder_number_char);
-        Serial.print("Making directory ");
+//        char image_name[11]="img";//follow 8.3 DOS file name format
+//        char image_count_str[5];
+//        sprintf(image_count_str,"%d",image_count);
+//        strcat(image_name,image_count_str);
+//        char extension[]=".jpg";
+//        strcat(image_name,extension);
+//
+//        char image_path[20]="FOLDER";
+//        char folder_number_char[3];	// Maxium is 255
+//        sprintf(folder_number_char, "%d", folder_num);
+//        strcat(image_path,folder_number_char);
+//        Serial.print("Making directory ");
+//        Serial.println(image_path);
+//		Serial.println(SD.mkdir(image_path));
+//
+//        strcat(image_path,"/");
+//        strcat(image_path,image_name);
+//        Serial.println(image_path);
+//
+//        myImage = SD.open(image_path, FILE_WRITE);
+        char image_path[12]="";
+        char temp[2]="";
+        sprintf(temp,"%.2d", Time.day());
+        strcat(image_path,temp);
+        sprintf(temp,"%.2d", Time.month());
+        strcat(image_path,temp);
+        strcat(image_path,"_");
+        sprintf(temp,"%d",image_count);
+        strcat(image_path,temp);
+        strcat(image_path,".jpg");
+        Serial.print("Image path is ");
         Serial.println(image_path);
-		Serial.println(SD.mkdir(image_path));
-
-        strcat(image_path,"/");
-        strcat(image_path,image_name);
-        Serial.println(image_path);
-
+        Serial.print("Size of image path is ");
+        Serial.println(sizeof(image_path));
         myImage = SD.open(image_path, FILE_WRITE);
 
         if (myImage){
@@ -218,6 +252,8 @@ int takePicture(String cmd){
             return 0;
         }
 	}
+	EEPROM.write(3,image_count);
+	digitalWrite(D7,LOW);
 	return 1;
 }
 
