@@ -77,7 +77,7 @@ char* VC0706::getCameraVersion(void){
 uint8_t VC0706::takePicture(){
 	uint8_t command_args[]={0x01,FBUF_STOP_CURRENT_FRAME};
 	sendCmd(FBUF_CTRL, command_args, sizeof(command_args));
-	readResponse(20,200);	//Read 20 response bytes to camera_buffer variables
+	readResponse(20,100);	//Read 20 response bytes to camera_buffer variables
 	uint8_t expected_result[]={0x76,0x00,0x36,0x00,0x00};
 	if (memcmp(expected_result, camera_buffer, 5*sizeof(uint8_t))==0) {
 		frame_pointer=0;	// Reset frame pointer to 0
@@ -94,7 +94,7 @@ uint8_t VC0706::takePicture(){
 uint16_t VC0706::getImageLength(){
 	uint8_t command_args[]={0x01, FBUF_CURRENT_FRAME};
 	sendCmd(GET_FBUF_LEN, command_args, sizeof(command_args));
-	readResponse(20,200);
+	readResponse(20,100);
 	uint8_t expected_result[]={0x76,0x00,0x34,0x00,0x04};
 	uint8_t image_length_bytes[4];
 	if (memcmp(expected_result,camera_buffer,5*sizeof(uint8_t))==0){
@@ -111,13 +111,14 @@ uint16_t VC0706::getImageLength(){
  *	@param[in]	bytes_to_read	indicate the number of bytes that one wants to read from the camera buffer's memory
  *	@return		pointer to the object's [camera_buffer]
  */
-uint8_t* VC0706::readPictureData(uint8_t bytes_to_read){
+uint8_t* VC0706::readPictureData(uint16_t bytes_to_read){
 	uint8_t command_args[]={0x0C,0x00,0x0A,
 							0x00,0x00,frame_pointer>>8,frame_pointer&0xFF,
 							0x00,0x00,0x00,bytes_to_read,
 							CAMERA_DELAY>>8, CAMERA_DELAY&0xFF};
 	sendCmd(READ_FBUF,command_args,sizeof(command_args));
-	readResponse(bytes_to_read+10,200);
+	// Actually bytes to read + 10. 10 is 5 bytes up front and 5 bytes at the end from response
+	readResponse(bytes_to_read+10,100);
 	frame_pointer+=bytes_to_read;
 	return camera_buffer;
 }
@@ -132,7 +133,7 @@ uint8_t* VC0706::readPictureData(uint8_t bytes_to_read){
 uint8_t VC0706::resumeVideo(){
 	uint8_t command_args[]={0x01, FBUF_RESUME_FRAME};
 	sendCmd(FBUF_CTRL,command_args,sizeof(command_args));
-	readResponse(20,200);
+	readResponse(20,100);
 	uint8_t expected_result[] = {0x76,0x00,0x36,0x00,0x00};
 	if (memcmp(expected_result,camera_buffer,5*sizeof(uint8_t))==0) return 0x01;
 	else return 0x00;

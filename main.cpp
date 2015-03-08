@@ -10,6 +10,7 @@ to set up a star network formed by multiple slave HM10 modules.
 #include "SD.h"
 #include "SdFat.h"
 
+#define MAXIMUM_BYTES_TO_READ	256
 Master myMaster;
 VC0706 myCamera;
 File myImage;
@@ -176,65 +177,39 @@ int takePicture(String cmd){
 		Serial.print("Image count is ");
 		Serial.println(image_count);
 	}
+    char image_path[12]="";
+    char temp[2]="";
+    sprintf(temp,"%.2d", Time.day());
+    strcat(image_path,temp);
+    sprintf(temp,"%.2d", Time.month());
+    strcat(image_path,temp);
+    strcat(image_path,"_");
 
 	for (int count=1;count<=7;count++){
-		// If takePicture() is ever called, the folder_num will be incremented and saved to EEPROM
-//		if (image_count==1){
-//			EEPROM.write(eeprom_address,++folder_num);
-//		}
 		Serial.println("Taking picture!");
         if(myCamera.resumeVideo()) Serial.println("Resume video.");
         delay(500);	// a delay is needed btw resumeVideo() and takePicture() in order to get a proper snapshot
         if(myCamera.takePicture()) Serial.println("Snapped!");
+        else return 0;
 
-        // Open an image on SD card to write
-//        char image_name[11]="img";//follow 8.3 DOS file name format
-//        char image_count_str[5];
-//        sprintf(image_count_str,"%d",image_count);
-//        strcat(image_name,image_count_str);
-//        char extension[]=".jpg";
-//        strcat(image_name,extension);
-//
-//        char image_path[20]="FOLDER";
-//        char folder_number_char[3];	// Maxium is 255
-//        sprintf(folder_number_char, "%d", folder_num);
-//        strcat(image_path,folder_number_char);
-//        Serial.print("Making directory ");
-//        Serial.println(image_path);
-//		Serial.println(SD.mkdir(image_path));
-//
-//        strcat(image_path,"/");
-//        strcat(image_path,image_name);
-//        Serial.println(image_path);
-//
-//        myImage = SD.open(image_path, FILE_WRITE);
-        char image_path[12]="";
-        char temp[2]="";
-        sprintf(temp,"%.2d", Time.day());
-        strcat(image_path,temp);
-        sprintf(temp,"%.2d", Time.month());
-        strcat(image_path,temp);
-        strcat(image_path,"_");
         sprintf(temp,"%d",image_count);
         strcat(image_path,temp);
         strcat(image_path,".jpg");
         Serial.print("Image path is ");
         Serial.println(image_path);
-        Serial.print("Size of image path is ");
-        Serial.println(sizeof(image_path));
         myImage = SD.open(image_path, FILE_WRITE);
 
         if (myImage){
             int32_t image_size = myCamera.getImageLength();
             Serial.println(image_size);
-            uint8_t bytes_to_read = 128;
+            uint16_t bytes_to_read = MAXIMUM_BYTES_TO_READ;
             unsigned long time_begin = millis();
             while (image_size>0){
                 if (image_size<bytes_to_read){
                     bytes_to_read=image_size;
                 }
                 uint8_t* stuffed_partial_image=myCamera.readPictureData(bytes_to_read);
-                for (int i=5; i<bytes_to_read+5;i++){
+                for (uint16_t i=5; i<bytes_to_read+5;i++){
                     myImage.write(*(stuffed_partial_image+i));
                 }
                 image_size=image_size-bytes_to_read;

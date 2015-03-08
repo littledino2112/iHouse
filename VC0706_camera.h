@@ -45,13 +45,13 @@ public:
 	uint8_t resumeVideo();
 	uint8_t takePicture();
 	uint16_t getImageLength();
-	uint8_t* readPictureData(uint8_t bytes_to_read);
+	uint8_t* readPictureData(uint16_t bytes_to_read);
 
 	inline void send(uint8_t byte) {Serial2.write(byte);}
 	inline uint8_t getBufferCounter(){return buffer_counter;}
 
 private:
-	static const uint8_t BUFFERLENGTH = 200;
+	static const uint16_t BUFFERLENGTH = 300;
 	const uint8_t CAMERA_DELAY = 10;
 	uint16_t frame_pointer;
 	uint8_t camera_buffer[BUFFERLENGTH+1];
