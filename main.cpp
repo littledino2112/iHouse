@@ -10,7 +10,7 @@ to set up a star network formed by multiple slave HM10 modules.
 #include "SD.h"
 #include "SdFat.h"
 
-#define MAXIMUM_BYTES_TO_READ	256
+#define MAXIMUM_BYTES_TO_READ	128
 Master myMaster;
 VC0706 myCamera;
 File myImage;
@@ -163,9 +163,13 @@ int takePicture(String cmd){
 	uint8_t month_to_compare = EEPROM.read(2);	// month is stored in Address 2
 	Serial.print("Day stored is ");
 	Serial.println(day_to_compare);
+	Serial.print("Today day is ");
+	Serial.println(Time.day());
+	Serial.print("Month is ");
+	Serial.println(Time.month());
 	Serial.print("Month stored is ");
 	Serial.println(month_to_compare);
-	if ((day_to_compare!=Time.day())&&(month_to_compare!=Time.month())){
+	if ((day_to_compare!=Time.day())||(month_to_compare!=Time.month())){
 		Serial.println("Day and month are not matched.");
 		image_count = 1;
 		EEPROM.write(1,Time.day());
@@ -177,13 +181,6 @@ int takePicture(String cmd){
 		Serial.print("Image count is ");
 		Serial.println(image_count);
 	}
-    char image_path[12]="";
-    char temp[2]="";
-    sprintf(temp,"%.2d", Time.day());
-    strcat(image_path,temp);
-    sprintf(temp,"%.2d", Time.month());
-    strcat(image_path,temp);
-    strcat(image_path,"_");
 
 	for (int count=1;count<=7;count++){
 		Serial.println("Taking picture!");
@@ -192,6 +189,14 @@ int takePicture(String cmd){
         if(myCamera.takePicture()) Serial.println("Snapped!");
         else return 0;
 
+        // Construct image path
+        char image_path[12]="";
+        char temp[2]="";
+        sprintf(temp,"%.2d", Time.day());
+        strcat(image_path,temp);
+        sprintf(temp,"%.2d", Time.month());
+        strcat(image_path,temp);
+        strcat(image_path,"_");
         sprintf(temp,"%d",image_count);
         strcat(image_path,temp);
         strcat(image_path,".jpg");
@@ -214,6 +219,7 @@ int takePicture(String cmd){
                 }
                 image_size=image_size-bytes_to_read;
                 Serial.print(".");
+//Serial.println(image_size);
             }
             myImage.close();
             unsigned long time_taken = millis()-time_begin;

@@ -52,10 +52,10 @@ public:
 
 private:
 	static const uint16_t BUFFERLENGTH = 300;
-	const uint8_t CAMERA_DELAY = 10;
+	const uint16_t CAMERA_DELAY = 10;
 	uint16_t frame_pointer;
 	uint8_t camera_buffer[BUFFERLENGTH+1];
-	uint8_t buffer_counter;
+	uint16_t buffer_counter;
 
 public:
     char camera_version[20];
